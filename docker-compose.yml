@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  documind:
+    build: .
+    container_name: documind
+    ports:
+      - "8501:8501"
+    volumes:
+      # Persist ChromaDB data between container restarts
+      - ./app/storage:/app/storage
+    environment:
+      - OLLAMA_HOST=http://host.docker.internal:11434
+      - OLLAMA_MODEL=mistral
+    extra_hosts:
+      # Allow the container to reach Ollama running on the host
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
