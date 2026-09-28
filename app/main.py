@@ -16,6 +16,16 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+# ── Secrets → environment ───────────────────────────────────────────────────
+# Some hosts (Streamlit Community Cloud) supply configuration through
+# st.secrets rather than the environment. Mirror it across before importing
+# anything that reads os.getenv at import time.
+try:
+    for _key, _val in st.secrets.items():
+        os.environ.setdefault(_key, str(_val))
+except Exception:
+    pass
+
 # ── Internal modules ────────────────────────────────────────────────────────
 from ui import (
     inject_css,
