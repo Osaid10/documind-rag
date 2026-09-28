@@ -1,7 +1,16 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+
 streamlit>=1.32.0
 chromadb>=0.4.22
 sentence-transformers>=2.6.0
 PyMuPDF>=1.23.0
 python-docx>=1.1.0
 requests>=2.31.0
-torch>=2.0.0
+
+# CPU-only torch: this app embeds on CPU and generates via an API or Ollama,
+# so the CUDA build is dead weight. macOS wheels are CPU-only already.
+torch==2.4.1+cpu; sys_platform != "darwin"
+torch==2.4.1; sys_platform == "darwin"
+
+# Only needed where the system sqlite3 is older than ChromaDB requires.
+pysqlite3-binary>=0.5.0; sys_platform == "linux"

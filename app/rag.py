@@ -17,6 +17,18 @@ import unicodedata
 from pathlib import Path
 from typing import Optional
 
+# ChromaDB requires sqlite3 >= 3.35. Some hosts (notably Streamlit Community
+# Cloud, which runs Debian 11) ship an older system library, so fall back to
+# the self-contained pysqlite3 build when that is the case.
+import sqlite3 as _sqlite3
+if _sqlite3.sqlite_version_info < (3, 35, 0):
+    try:
+        import sys
+        import pysqlite3  # noqa: F401
+        sys.modules["sqlite3"] = sys.modules.pop("pysqlite3")
+    except ImportError:
+        pass
+
 import chromadb
 from chromadb.config import Settings
 from sentence_transformers import SentenceTransformer
