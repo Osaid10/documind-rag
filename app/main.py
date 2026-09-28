@@ -75,6 +75,15 @@ def _init_session_state() -> None:
 _init_session_state()
 store = get_document_store()
 
+# Hosted demo: seed one sample document so a visitor can ask something
+# immediately instead of having to find a PDF first.
+if os.getenv("DEMO_SAMPLE") == "1" and not store.list_documents():
+    try:
+        import sample
+        sample.preload(store)
+    except Exception as exc:  # a broken sample must not take the app down
+        st.warning(f"Could not load the sample document: {exc}")
+
 
 # ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -204,10 +213,10 @@ def render_sidebar() -> None:
                 st.rerun()
 
         # ── Model info footer ──────────────────────────────────────────────
-        model_name = os.getenv("OLLAMA_MODEL", "mistral")
-        ollama_ok = llm.is_ollama_running()
-        status_color = "#22c55e" if ollama_ok else "#ef4444"
-        status_text = "Online" if ollama_ok else "Offline"
+        model_name = llm.model_name()
+        backend_ok = llm.backend_ready()
+        status_color = "#22c55e" if backend_ok else "#ef4444"
+        status_text = "Online" if backend_ok else "Offline"
         st.markdown(
             f"""
             <div style="margin-top:auto;padding-top:16px;">
@@ -218,7 +227,7 @@ def render_sidebar() -> None:
                         <span style="color:#a5b4fc;font-weight:500;">{model_name}</span>
                     </div>
                     <div style="display:flex;justify-content:space-between;align-items:center;">
-                        <span>&#9679; Ollama</span>
+                        <span>&#9679; {llm.backend_name()}</span>
                         <span style="color:{status_color};font-weight:500;">{status_text}</span>
                     </div>
                 </div>
@@ -270,8 +279,8 @@ def render_main() -> None:
     )
     st.markdown(custom_divider(), unsafe_allow_html=True)
 
-    # ── Ollama status warning ────────────────────────────────────────────────
-    if not llm.is_ollama_running():
+    # ── Backend status warning ───────────────────────────────────────────────
+    if not llm.backend_ready():
         st.markdown(ollama_error_card(), unsafe_allow_html=True)
         st.markdown("<br>", unsafe_allow_html=True)
 
